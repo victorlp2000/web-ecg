@@ -1,2 +1,38 @@
 
-This is example code for [this blog post](http://jpmens.net/2014/07/03/the-mosquitto-mqtt-broker-gets-websockets-support/).
+data format:
+{  
+   "d":{  
+      "packet":2,
+      "ecg":{  
+         "start_ecg":1441823056036,
+         "ecg":[  
+            -5,
+            -4,
+            -3,
+            -2,
+            -1,
+            0,
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+         ]
+      },
+      "client_id":"b0b448b82707",
+      "gyro_x":"-2.84",
+      "compass_y":"-24.00",
+      "humidity":"49.33",
+      "acc_y":"-0.02",
+      "object_temp":"25.69",
+      "acc_x":"0.09",
+      "light":"2.01",
+      "gyro_z":"0.25",
+      "compass_x":"44.33",
+      "ambient_temp":"18.44",
+      "gyro_y":"-2.67",
+      "compass_z":"117.33",
+      "acc_z":"1.05"
+   }
+}

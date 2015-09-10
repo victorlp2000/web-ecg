@@ -74,6 +74,7 @@
         } catch(err) {
             console.log("!!! json string error: " + payload);
         }
+        console.log(jsonObject);
         if (processData(topic, jsonObject) == false) {
             console.log(topic + ' = ' + payload);
         }
@@ -81,11 +82,12 @@
 
     // return 'true' if the data is handled
     function processData(topic, data) {
+        console.log(topic);
         topics[topic] = Date();
         if ((topic == activeTopic) || (activeTopic == null)) {
             activeTopic = topic;
             if ('d' in data) {
-                if ('ecg' in data.d && 'time_ecg' in data.d) {
+                if ('ecg' in data.d && 'start_ecg' in data.d) {
                     return drawEcg(data.d);
                 } else {
                     console.log("no time_ecg or ecg");
@@ -158,7 +160,6 @@
     </script>
   </head>
   <body>
-    <h3>ECG Data from: </h3> <div id="topic"></div>
         Status: <input type='text' id='status' disabled /></div>
         <p><canvas id="canvas" width="1" height="1"></canvas></p>
     </div>

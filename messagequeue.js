@@ -1,99 +1,173 @@
-
-// each message has a packet number which is in sequence
-// we save maxmimum N in queue
-
-var messageQueue = new Array();
-var maxMessageInQueue = 10;
-var currentIndex = 0;
-var endIndex = 0;
-var currentOffset = 0;  // offset in packet
-
 /*
 messsage = {
-    index: sequence number
-    ecg: array of data items
-}
-            +-----------+
-            |           |
-            +-----------+
-currentIndex| message-1 |
-            +-----------+
-            | message-2 |
-            +-----------+
-            |    ...    |
-            +-----------+
-            | message-N |
-            +-----------+
-endIndex    |           |
+    packet: sequence number
+    ecg: {
+        start_time: miliseconds
+        ecg: [data1, data2, ...]
+    }
+    others:
+};
 
+using circle buffer as queue, like:
+                +-----------+
+                |           |
+                +-----------+
+        head--> | message-1 |
+                +-----------+
+                | message-2 |
+                +-----------+
+                |    ...    |
+                +-----------+
+                | message-N |
+                +-----------+
+        tail--> |           |
+                +-----------+
+                |           |
 */
+function MessageQueue(maxItems) {
+    var queue = new Array();
+    var queueSize = maxItems || 10;
+    var lastPacket = -1;
+    var head = 0;   // point to head in queue
+    var tail = 0;   // point to tail in queue
+    var offset = 0; // element index in head item
 
-function nextIndex(current) {
-    var check = current + 1;
-    if (check >= maxMessageInQueue) {
-        check = 0;
-    }
-    return check;
-}
+    queueSize ++;
 
-function prevIndex(current) {
-    var check = current - 1;
-    if (check < 0) {
-        check = mexMessageInQueue - 1;
-    }
-    return check;
-}
-
-// add new message into queue
-function addNew(message) {
-    // queue is empty, just add to queue
-    if (currentIndex == endIndex) {
-        messageQueue[endIndex] = message;
-        endIndex = nextIndex(endIndex);
-        return;
-    }
-    // ignore the message if the index less than currentIndex
-    if (message.index <= messageQueue[currentIndex].index) {
-        // expires message, ignore
-        return;
+    function next(current) {
+        var check = current + 1;
+        if (check >= queueSize) {
+            check = 0;
+        }
+        return check;
     }
 
-    index = message.index %  maxMessageInQueue;
-    while (index != endIndex) {
-        messageQueue[endIndex] = null;
-        endIndex = nextIndex(endIndex);
+    function prev(current) {
+        var check = current - 1;
+        if (check < 0) {
+            check = queueSize - 1;
+        }
+        return check;
+    }
 
-        // overlapped, move current to next
-        if (endIndex == currentIndex) {
-            currentIndex = nextIndex(currentIndex);
-            currentOffset = 0;
+    /***
+     * print map of the queue
+     */
+    function printMap() {
+        var i, mark;
+        console.log('-----' + (queueSize-1) + '-----');
+        for (i = 0; i < queueSize; i++) {
+            mark = "";
+            if (head == i) {
+                mark += "h";
+            } else {
+                mark += " ";
+            }
+            if (tail == i) {
+                mark += "t";
+            } else {
+                mark += " ";
+            }
+            if (queue[i] != null) {
+                msg = queue[i].packet;
+            } else {
+                msg = "";
+            }
+            console.log(mark + '|' + msg);
         }
     }
-    if (index == endIndex) {
-        messageQueue[endIndex] = message;
-        endIndex = nextIndex(endIndex);
 
-        // overlapped, move current to next
-        if (endIndex == currentIndex) {
-            currentIndex = nextIndex(currentIndex);
-            currentOffset = 0;
+    function getHead() {
+        return head;
+    }
+
+    function getTail() {
+        return tail;
+    }
+
+    /***
+     * return number of items in the queue
+     */
+    function getNumberOfMessages() {
+        if (head == tail) {
+            return 0;
         }
-        return;
+        if (head < tail) {
+            return tail - head;
+        }
+        return tail + queueSize - head;
+    }
+
+    /***
+     *   put new message into queue,
+     *   return number of items in the queue
+     */
+    function putMessage(message) {
+        var index = message.packet % queueSize;
+
+        // start a new list
+        if (message.packet == 0) {
+            head = tail = 0;
+        }
+        // queue is empty, put at the index
+        if (head == tail) {
+            head = index;
+            queue[head] = message;
+            tail = next(head);
+            lastPacket = message.packet;
+        } else if (message.packet <= lastPacket) {
+            // if message not in sequence, it must between
+            // head and tail, otherwise it will be ignored
+            if (head < tail) {
+                if (index >= head && index < tail) {
+                    queue[index] = message;
+                } else {
+                    console.log("message has expired 1");
+                }
+            } else {
+                if (index < tail || index >= head) {
+                    queue[index] = message;
+                } else {
+                    console.log("message has expired 2");
+                }
+            }
+            // keep the lastPacket
+        } else {
+            while (index != tail) {
+                queue[tail] = null;
+                tail = next(tail);
+                if (tail == head) {
+                    head = next(head);
+                }
+            }
+            queue[tail] = message;
+            tail = next(tail);
+            if (tail == head) {
+                head = next(head);
+            }
+            lastPacket = message.packet;
+        }
+        return getNumberOfMessages();
+    }
+
+    function getMessage() {
+        if (head != tail) {
+            var message = queue[head];
+            head = next(head);
+            return message;
+        }
+        return null;
+    }
+    return {
+        printMap: printMap,
+        getHead: getHead,
+        getTail: getTail,
+        getNumberOfMessages: getNumberOfMessages,
+        putMessage: putMessage,
+        getMessage: getMessage,
     }
 }
 
-function getItem() {
-    if (messageQueue[currentIndex].ecg.length > currentOffset) {
-        var item = messageQueue[currentIndex].ecg[currentOffset];
-        currentOffset ++;
-        return item;
-    } else {
-        currentIndex = nextIndex(currentIndex);
-        if (currentIndex == endIndex) {
-            // no data
-            return Number.NaN;
-        }
-        currentOffset = 0;
-        return getItem();
-    }   
+module.exports = {
+    MessageQueue: MessageQueue,
 }
