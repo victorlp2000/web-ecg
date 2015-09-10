@@ -24,6 +24,10 @@ using circle buffer as queue, like:
                 +-----------+
                 |           |
 */
+
+/***
+ *  maxItems - maximum number of items keep in queue
+ */
 function MessageQueue(maxItems) {
     var queue = new Array();
     var queueSize = maxItems || 10;
@@ -32,7 +36,8 @@ function MessageQueue(maxItems) {
     var tail = 0;   // point to tail in queue
     var offset = 0; // element index in head item
 
-    queueSize ++;
+    queueSize ++;   // circle buffer has one item empty
+                    // so here plus one
 
     function next(current) {
         var check = current + 1;
@@ -122,13 +127,13 @@ function MessageQueue(maxItems) {
                 if (index >= head && index < tail) {
                     queue[index] = message;
                 } else {
-                    console.log("message has expired 1");
+                    console.log("message expired.");
                 }
             } else {
                 if (index < tail || index >= head) {
                     queue[index] = message;
                 } else {
-                    console.log("message has expired 2");
+                    console.log("message expired.");
                 }
             }
             // keep the lastPacket
@@ -150,6 +155,25 @@ function MessageQueue(maxItems) {
         return getNumberOfMessages();
     }
 
+    function saveQueue() {
+        var saveHead = head;
+        var saveTail = tail;
+        var msg;
+        var msgs = 0;
+        console.log("saving...");
+        while (head != tail) {
+            msg = getMessage();
+            if (msg != null) {
+                console.log(msg);
+                msgs ++;
+            }
+        }
+        head = saveHead;
+        tail = saveTail;
+        console.log("--saved: " + msgs);
+        return msgs;
+    }
+
     function getMessage() {
         if (head != tail) {
             var message = queue[head];
@@ -165,6 +189,7 @@ function MessageQueue(maxItems) {
         getNumberOfMessages: getNumberOfMessages,
         putMessage: putMessage,
         getMessage: getMessage,
+        saveQueue: saveQueue,
     }
 }
 
