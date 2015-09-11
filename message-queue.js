@@ -90,6 +90,11 @@ function MessageQueue(maxItems) {
         return tail;
     }
 
+    function reset() {
+        head = tail = 0;
+        return;
+    }
+
     /***
      * return number of items in the queue
      */
@@ -155,7 +160,7 @@ function MessageQueue(maxItems) {
         return getNumberOfMessages();
     }
 
-    function saveQueue() {
+    function save() {
         var saveHead = head;
         var saveTail = tail;
         var msg;
@@ -189,10 +194,10 @@ function MessageQueue(maxItems) {
         getNumberOfMessages: getNumberOfMessages,
         putMessage: putMessage,
         getMessage: getMessage,
-        saveQueue: saveQueue,
+        save: save,
+        reset: reset
     }
 }
-
 module.exports = {
     MessageQueue: MessageQueue,
 }

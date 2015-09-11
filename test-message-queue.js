@@ -1,4 +1,4 @@
-var msgq = require('./messagequeue');
+var msgq = require('./message-queue');
 
 var q = msgq.MessageQueue(5);
 //console.log(q);
@@ -133,10 +133,12 @@ checkPutReturn(q.putMessage({packet:1}), 2);
 checkPutReturn(q.putMessage({packet:2}), 3);
 checkPutReturn(q.putMessage({packet:4}), 5);
 checkPutReturn(q.putMessage({packet:5}), 5);
-q.saveQueue();
 checkGetReturn(q.getMessage(), 1);
 checkGetReturn(q.getMessage(), 2);
 checkGetReturn(q.getMessage(), null);
 checkPutReturn(q.putMessage({packet:4}), 2);
 checkPutReturn(q.putMessage({packet:3}), 2);
-q.saveQueue();
+
+q.reset();
+checkPutReturn(q.putMessage({packet:5}), 1);
+q.printMap();
