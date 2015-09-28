@@ -114,7 +114,11 @@ function MessageQueue(maxItems) {
      */
     function putMessage(message) {
         var index = message.packet % queueSize;
-
+        if (message.packet == undefined) {
+            console.log("ignored, no packet number");
+            console.log(message);
+            return;
+        }
         // start a new list
         if (message.packet == 0) {
             head = tail = 0;
@@ -198,6 +202,7 @@ function MessageQueue(maxItems) {
         reset: reset
     }
 }
+/*
 module.exports = {
     MessageQueue: MessageQueue,
-}
+}*/

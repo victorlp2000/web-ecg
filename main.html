@@ -1,0 +1,125 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Mosquitto Websockets</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="mqttws31.js" type="text/javascript"></script>
+    <script src="jquery.min.js" type="text/javascript"></script>
+    <script src="config.js" type="text/javascript"></script>
+    <script src="subscriber.js" type="text/javascript"></script>
+    <script src="message-queue.js" type="text/javascript"></script>
+    <style>
+        #status {
+            border:1px solid #000000;
+            width:200px;
+        }
+        #canvas {
+            border:1px solid #000000;
+        }
+    </style>
+    <script type="text/javascript">
+        var canvasElement, statusElement;
+        var context;    // canvas context
+
+        var intervals = [6, 5.8, 5.4, 5.0, 4.6, 4.2, 3.8, 3.4, 3.0, 2.6, 2.2, 1.8];
+        var timerInterval = intervals[4];
+        var timer = null;
+        
+        var messageData = null;
+        var dataIndex = 0;
+
+        var queue = new MessageQueue(20);
+        var queuedMsg = 0;
+
+        var options = {
+                host: host,
+                port: port,
+                statusHandler: statusHandler,
+                messageHandler: messageHandler,
+        }
+
+        var subscriber = new Subscriber(options);
+
+        function statusHandler(text) {
+            //console.log("status:" + text);
+            $('#status').val(text);
+        }
+
+        function messageHandler(message) {
+            var topic = message.destinationName;
+            var payload = message.payloadString;
+            var jsonObject = {};
+            console.log(topic);
+            try {
+                jsonObject = JSON.parse(payload);
+            } catch(err) {
+                console.log("!!! json string error: " + payload.toString());
+            }
+            if (jsonObject.d.packet == undefined) {
+                console.log("ignore...");
+                console.log(jsonObject.d);
+                return;
+            }
+            statusHandler("put packet: " + jsonObject.d.packet + ", interval:" + timerInterval + ", queue:" + queuedMsg);
+            queuedMsg = queue.putMessage(jsonObject.d);
+            if (queuedMsg < intervals.length)
+                timerInterval = intervals[queuedMsg];
+            else
+                timerInterval = 1;
+            startShow();
+        }
+
+        var getData = function () {
+            if (messageData == null || messageData.ecg.data.length <= dataIndex) {
+                messageData = queue.getMessage();
+                dataIndex = 0;
+            }
+            if (messageData == null) {
+                console.log("no more data");
+                timer = null;
+                return;
+            }
+            //console.log(messageData.ecg.data.length + " <> " + dataIndex);
+            if (messageData.ecg.data.length > dataIndex) {
+                var value = messageData.ecg.data[dataIndex];
+                dataIndex += 1;
+            }
+            timer = null;
+            startShow();
+        }
+
+        function startShow() {
+            if (timer == null) {
+                timer = setTimeout(getData, timerInterval);
+            }
+        }
+
+        function resizeCanvas() {
+            var w = $(window).width();
+            if (w < 200)
+                w = 200;    // minimum width
+            canvasWidth = w - canvasElement.offsetLeft * 2;
+            canvasElement.width = canvasWidth;
+            statusElement.style.width = (w - statusElement.offsetLeft - canvasElement.offsetLeft) + 'px';
+        }
+
+        window.onresize = function(event) {
+            resizeCanvas();
+        }
+
+        $(document).ready(function() {
+            canvasElement = document.getElementById('canvas');
+            statusElement = document.getElementById('status');
+            context = canvasElement.getContext('2d');
+            resizeCanvas();
+            subscriber.connect();
+        });
+    </script>
+  </head>
+  <body>
+        Status:<br>
+        <input type='text' id='status' disabled /></div>
+        <p><canvas id="canvas" width="1" height="100"></canvas></p>
+    </div>
+  </body>
+</html>

@@ -3,29 +3,35 @@
  *  options:
  *      host: host uri
  *      port: port number
+ *      topic: topic string
  *      statusHandler: function(text-message)
  *      messageHandler: function(message)
  */
-function Subscriber(options) {
+var Subscriber = function(userOptions) {
     var mqtt;
     var reconnectTimeout = 2000;
+    var options = userOptions;
 
     // default options
-    if (options.statusHandler != "function") {
-        options.statusHandler = function(msg) {
-            console.log('status: ' + msg);
-        };
+    defaultStatusHandler = function(msg) {
+        console.log('status: ' + msg);
     }
 
-    if (typeof options.messageHandler != "function") {
-        options.messageHandler = function(msg) {
-            console.log('message: ' + msg.toString());
-        };
+    defaultMessageHandler = function(msg) {
+        console.log('message: ' + msg.toString());
     }
 
-    function connect() {
+    var connect = function () {
+        // default options
+        if (typeof options.statusHandler != "function") {
+            options.statusHandler = defaultStatusHandler;
+        }
+
+        if (typeof options.messageHandler != "function") {
+            options.messageHandler = defaultMessageHandler;
+        }
         mqtt = new Paho.MQTT.Client(
-                        host, port,
+                        options.host, options.port,
                         "web_" + parseInt(Math.random() * 100,
                         10));
         var opts = {
@@ -39,62 +45,40 @@ function Subscriber(options) {
         mqtt.onConnectionLost = onConnectionLost;
         mqtt.onMessageArrived = onMessageArrived;
 
-        console.log("Host="+ host + ", port=" + port + " TLS = " + useTLS + " username=" + username + " password=" + password);
+        options.statusHandler("Host="+ host + ", port=" + port + " TLS = " + useTLS + " username=" + username + " password=" + password);
         mqtt.connect(opts);
     }
 
     function onConnect() {
-        $('#status').val('Connected to ' + host + ':' + port);
+        options.statusHandler('Connected to ' + host + ':' + port);
         // Connection succeeded; subscribe to our topic
+        if (options.topic == undefined)
+            options.topic = "#";
+
         mqtt.subscribe(topic, {qos: 0});
-        $('#topic').val(topic);
+        options.statusHandler("subscribe to: " + topic);
     }
 
     function onFailure(msg) {
-        $('#status').val("Connection failed: " + message.errorMessage + "Retrying");
-        setTimeout(MQTTconnect, reconnectTimeout);
+        options.statusHandler("Connection failed: " + msg.errorMessage + "Retrying");
+        setTimeout(connect, reconnectTimeout);
     }
 
     function onConnectionLost(response) {
-        setTimeout(MQTTconnect, reconnectTimeout);
-        $('#status').val("connection lost: " + response.errorMessage + ". Reconnecting");
-
+        options.statusHandler("connection lost: " + response.errorMessage + ". Reconnecting");
+        setTimeout(connect, reconnectTimeout);
     };
 
     function onMessageArrived(message) {
-        var topic = message.destinationName;
-        var payload = message.payloadString;
-        var jsonObject = "";
+        //options.statusHandler("received message");
         try {
-            jsonObject = JSON.parse(payload);
+            options.messageHandler(message);
         } catch(err) {
-            console.log("!!! json string error: " + payload);
-        }
-        console.log(jsonObject);
-        if (processData(topic, jsonObject) == false) {
-            console.log(topic + ' = ' + payload);
+            console.log("!!! json string error: " + message);
         }
     };
 
-    // return 'true' if the data is handled
-    function processData(topic, data) {
-        console.log(topic);
-        topics[topic] = Date();
-        if ((topic == activeTopic) || (activeTopic == null)) {
-            activeTopic = topic;
-            if ('d' in data) {
-                if ('ecg' in data.d && 'start_ecg' in data.d) {
-                    return drawEcg(data.d);
-                } else {
-                    console.log("no time_ecg or ecg");
-                    return false;
-                }
-            } else {
-                console.log("there is no 'd' element in the message");
-                return false;
-            }
-        } else {
-            console.log("the topic is not in active: " + topic);
-            return false;
-        }
+    return {
+        connect: connect,
     }
+}
