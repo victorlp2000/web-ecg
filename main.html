@@ -22,12 +22,13 @@
         var canvasElement, statusElement;
         var paint;    // canvas object
 
-        var intervals = [5.4, 5.0, 4.6, 4.2, 3.8, 3.4, 3.0, 2.6, 2.2, 1.8];
+        var intervals = [12, 11, 10, 9, 8, 8, 7, 6, 5, 4, 3];
         var timerInterval = intervals[4];
         var timer = null;
         
         var messageData = null;
         var dataIndex = 0;
+        var speed = 2;
 
         var queue = new MessageQueue(20);
         var queuedMsg = 0;
@@ -85,11 +86,10 @@
                 return;
             }
 
-            //console.log(messageData.ecg.data.length + " <> " + dataIndex);
             if (messageData.ecg.data.length > dataIndex) {
-                var value = messageData.ecg.data[dataIndex];
-                paint.drawData(value);
-                dataIndex += 1;
+                var values = messageData.ecg.data.slice(dataIndex, dataIndex + speed);
+                paint.drawData(values);
+                dataIndex += speed;
             }
             timer = null;
             startShow();
@@ -128,7 +128,7 @@
   <body>
         Status:<br>
         <input type='text' id='status' disabled /></div>
-        <p><canvas id="canvas" width="1" height="300"></canvas></p>
+        <p><canvas id="canvas" width="1" height="100"></canvas></p>
     </div>
   </body>
 </html>
