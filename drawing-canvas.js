@@ -2,7 +2,7 @@
         var canvas = canvasElement;
         var context = canvasElement.getContext('2d');
 
-        var canvasColor = "rgba(255, 0, 0, 0.2)";    // background color
+        var canvasColor = "#000000";    // background color
         var graphColor = "#00ff00";     // graph color
         var cursorColor = "#ffffff";    // cursor color
 
@@ -10,7 +10,7 @@
         // factor change size, ofset change position
         // newValue = value * factor + offset
         var factor = 0.002;
-        var offset = 50;
+        var offset = 80;
 
         // current point (x1, y1) previous point
         // (x2, y2) new point
