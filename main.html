@@ -7,6 +7,7 @@
     <script src="jquery.min.js" type="text/javascript"></script>
     <script src="config.js" type="text/javascript"></script>
     <script src="subscriber.js" type="text/javascript"></script>
+    <script src="subscriber-emulator.js" type="text/javascript"></script>
     <script src="message-queue.js" type="text/javascript"></script>
     <script src="drawing-canvas.js" type="text/javascript"></script>
     <style>
@@ -26,7 +27,7 @@
         }
     </style>
     <script type="text/javascript">
-        var canvasElement;
+        var f_canvas;
         var f_status, f_receive, f_device, f_display, f_queue, f_interval;
         var paint;    // canvas object
 
@@ -48,14 +49,14 @@
                 messageHandler: messageHandler,
         }
 
-        var subscriber = new Subscriber(options);
+        //var subscriber = new Subscriber(options);
+        var subscriber = new SubscriberEmulator(options);
 
         function statusHandler(text) {
-            setValue(f_status, text);
+            setField(f_status, text);
         }
 
-        function setValue(field, content) {
-            console.log("ff:" + field);
+        function setField(field, content) {
             $(field).val(content);
         }
 
@@ -63,24 +64,20 @@
             var topic = message.destinationName;
             var payload = message.payloadString;
             var jsonObject = {};
-            setValue(f_device, topic);
-    //        try {
-                jsonObject = JSON.parse(payload);
-    //        } catch(err) {
-    //            console.log("!!! json string error: " + payload.toString());
-    //        }
+            setField(f_device, topic);
+            jsonObject = JSON.parse(payload);
             if (jsonObject.d.packet == undefined) {
                 console.log("ignore...");
                 console.log(jsonObject.d);
                 return;
             }
-            setValue(f_receive, "packet: " + jsonObject.d.packet);
+            setField(f_receive, "packet: " + jsonObject.d.packet);
             queuedMsg = queue.putMessage(jsonObject.d);
             if (queuedMsg < intervals.length)
                 timerInterval = intervals[queuedMsg];
             else
                 timerInterval = 1;
-            setValue(f_interval, timerInterval);
+            setField(f_interval, timerInterval);
             startShow();
         }
 
@@ -94,12 +91,12 @@
                 }
             }
             if (messageData == null) {
-                setValue(f_display, "no more data");
+                setField(f_display, "no more data");
                 timer = null;
                 return;
             }
-            setValue(f_display, messageData.packet);
-            setValue(f_queue, queue.getNumberOfMessages());
+            setField(f_display, messageData.packet);
+            setField(f_queue, queue.getNumberOfMessages());
             if (messageData.ecg.data.length > dataIndex) {
                 var values = messageData.ecg.data.slice(dataIndex, dataIndex + speed);
                 paint.drawData(values);
@@ -119,8 +116,8 @@
             var w = $(window).width();
             if (w < 200)
                 w = 200;    // minimum width
-            canvasWidth = w - canvasElement.offsetLeft * 2;
-            canvasElement.width = canvasWidth;
+            canvasWidth = w - f_canvas.offsetLeft * 2;
+            f_canvas.width = canvasWidth;
             paint.clearCanvas();
         }
 
@@ -129,7 +126,7 @@
         }
 
         $(document).ready(function() {
-            canvasElement = document.getElementById('canvas');
+            f_canvas = document.getElementById('canvas');
             f_status = document.getElementById('status');
             f_receive = document.getElementById('receive');
             f_device = document.getElementById('device');
@@ -137,8 +134,8 @@
             f_queue = document.getElementById('queue');
             f_interval = document.getElementById('interval');
             
-            paint = new DrawingCanvas(canvasElement);
-            console.log(paint);
+            paint = new DrawingCanvas(f_canvas);
+            //console.log(paint);
             resizeCanvas();
             subscriber.connect();
         });

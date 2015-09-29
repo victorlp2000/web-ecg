@@ -45,7 +45,7 @@ var Subscriber = function(userOptions) {
         mqtt.onConnectionLost = onConnectionLost;
         mqtt.onMessageArrived = onMessageArrived;
 
-        options.statusHandler("Host="+ host + ", port=" + port + " TLS = " + useTLS + " username=" + username + " password=" + password);
+        options.statusHandler("host="+ options.host + ", port=" + options.port);
         mqtt.connect(opts);
     }
 
@@ -70,12 +70,8 @@ var Subscriber = function(userOptions) {
     };
 
     function onMessageArrived(message) {
-        //options.statusHandler("received message");
-        try {
-            options.messageHandler(message);
-        } catch(err) {
-            console.log("!!! json string error: " + message);
-        }
+        //console.log(message);
+        options.messageHandler(message);
     };
 
     return {

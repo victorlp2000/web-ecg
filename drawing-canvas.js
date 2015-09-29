@@ -9,8 +9,9 @@
         // to fix graph in window, value need to be normalized:
         // factor change size, ofset change position
         // newValue = value * factor + offset
-        var factor = 0.002;
-        var offset = 80;
+        var factor = 1;
+        var offset = 0;
+        var lastValues = [];
 
         // current point (x1, y1) previous point
         // (x2, y2) new point
@@ -40,8 +41,23 @@
         }
 
         function normalize(value) {
+            var minValue, maxValue;
+            lastValues.push(value);
+            if (lastValues.length > 200) {
+                lastValues = lastValues.slice(1);
+            }
+            minValue = maxValue = lastValues[0];
+            for (i = 1; i < lastValues.length; i++) {
+                if (lastValues[i] > maxValue)
+                    maxValue = lastValues[i];
+                if (lastValues[i] < minValue)
+                    minValue = lastValues[i];
+            }
+            offset = -minValue;
+            factor = canvas.height / (maxValue - minValue);
+
             var v = canvas.height - (value * factor + offset);
-            //console.log(value * factor);
+            //console.log('factor:' + minValue + ', offset:' + maxValue);
             return v;
         }
 
@@ -52,39 +68,39 @@
             x2 = 0;
         }
 
+        function drawData(values) {
+            if (values.length <= 0)
+                return;
+            var index = 0;
+            if (x1 == -1) {
+                x1 = 0;
+                y1 = normalize(values[index]);
+                index ++;
+                //clearCanvas();
+            }
+            clearDrawArea(values.length);
+            context.beginPath();
+            context.moveTo(x1, y1);
+
+            while (index < values.length) {
+                x2 = x1 + 1;
+                y2 = normalize(values[index]);
+                index ++;
+                context.lineTo(x2, y2);
+                x1 = x2;
+                y1 = y2;
+                if (x2 >= canvas.width) {
+                    x1 = -1;
+                    break;  // ignore other values,
+                            // don't have to accurate at this point
+                }
+            }
+            context.strokeStyle = graphColor;
+            context.stroke();
+            //drawCursor();
+        }
         return {
             clearCanvas : clearCanvas,
-
-            drawData: function(values) {
-                if (values.length <= 0)
-                    return;
-                var index = 0;
-                if (x1 == -1) {
-                    x1 = 0;
-                    y1 = normalize(values[index]);
-                    index ++;
-                    clearCanvas();
-                }
-                //clearDrawArea(values.length);
-                context.beginPath();
-                context.moveTo(x1, y1);
-
-                while (index < values.length) {
-                    x2 = x1 + 1;
-                    y2 = normalize(values[index]);
-                    index ++;
-                    context.lineTo(x2, y2);
-                    x1 = x2;
-                    y1 = y2;
-                    if (x2 >= canvas.width) {
-                        x1 = -1;
-                        break;  // ignore other values,
-                                // don't have to accurate at this point
-                    }
-                }
-                context.strokeStyle = graphColor;
-                context.stroke();
-                //drawCursor();
-            }
+            drawData: drawData,
         }
     }
