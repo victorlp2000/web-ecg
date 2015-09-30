@@ -2,7 +2,7 @@
         var canvas = canvasElement;
         var context = canvasElement.getContext('2d');
 
-        var canvasColor = "#000000";    // background color
+        var gridColor = "#666666";    // background color
         var graphColor = "#00ff00";     // graph color
         var cursorColor = "#ffffff";    // cursor color
 
@@ -22,9 +22,12 @@
             start from the current position (x1) for width
         */
         function clearDrawArea(width) {
-            context.fillStyle = canvasColor;
-            context.fillRect(x1, 0, width + 20, canvas.height);
-            //context.fill();
+            context.save();
+            context.rect(x1, 0, width + 20, canvas.height);
+            context.clip();
+            context.clearRect(x1, 0, width + 20, canvas.height);
+            drawGrid();
+            context.restore();
         }
 
         /*
@@ -32,11 +35,11 @@
         */
         function drawCursor() {
             context.beginPath();
-            context.rect(x1 + 5, y1 - 5, 5, 5);
+            context.arc(x1 + 6, y1 - 3, 5, 0, 2 * Math.PI);
             context.fillStyle = cursorColor;
             context.fill();
             context.strokeStyle = cursorColor;
-            context.lineWidth = 1;
+            context.lineWidth = 3;
             context.stroke();
         }
 
@@ -57,15 +60,28 @@
             factor = canvas.height / (maxValue - minValue);
 
             var v = canvas.height - (value * factor + offset);
-            //console.log('factor:' + minValue + ', offset:' + maxValue);
             return v;
         }
 
         function clearCanvas() {
-            context.fillStyle = canvasColor;
-            context.fillRect(0, 0, canvas.width, canvas.height);
-            x1 = 0;
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            drawGrid();
+            x1 = -1;
             x2 = 0;
+        }
+
+        function drawGrid() {
+            var i = 250;    // 1/4 sec
+            context.save();
+            context.beginPath();
+            for (i = 0; i < canvas.width; i += 25) {
+                context.moveTo(i, 0);
+                context.lineTo(i, canvas.height);
+            }
+            context.strokeStyle = gridColor;
+            context.lineWidth = 0.5;
+            context.stroke();
+            context.restore();
         }
 
         function drawData(values) {
@@ -97,7 +113,7 @@
             }
             context.strokeStyle = graphColor;
             context.stroke();
-            //drawCursor();
+            drawCursor();
         }
         return {
             clearCanvas : clearCanvas,

@@ -23,7 +23,8 @@
             color: blue;
         }
         #canvas {
-            border:1px solid #000000;
+            border:3px solid #000000;
+            background-color: #ffffff;
         }
     </style>
     <script type="text/javascript">
@@ -144,22 +145,22 @@
   <body>
     <div>
         <div class='name'>Status:</div>
-        <input type='text' class='value' id='status'></input><br>
+        <input type='text' class='value' id='status' readonly></input><br>
         
         <div class='name'>Receive:</div>
-        <input type='text' class='value' id='receive'></input><br>
+        <input type='text' class='value' id='receive' readonly></input><br>
         
         <div class='name'>Device:</div>
-        <input type='text' class='value' id='device'></input><br>
+        <input type='text' class='value' id='device' readonly></input><br>
         
         <div class='name'>Display:</div>
-        <input type='text' class='value' id='display'></input><br>
+        <input type='text' class='value' id='display' readonly></input><br>
         
         <div class='name'>Queue:</div>
-        <input type='text' class='value' id='queue'></input><br>
+        <input type='text' class='value' id='queue' readonly></input><br>
         
         <div class='name'>Interval:</div>
-        <input type='text' class='value' id='interval'></input><br>
+        <input type='text' class='value' id='interval' readonly></input><br>
     </div>
     <canvas id="canvas" width="1" height="200"></canvas>
   </body>
