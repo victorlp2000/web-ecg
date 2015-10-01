@@ -14,18 +14,14 @@
         var xOffset = 0;
         var yOffset = 0;        // dynamically changing based on positive/negtive values
         var userXScale = 1;     // user specified yScale, apply over system yScale
-        var userYScale = 1;
+        var userYScale = 0.5;
         var userXOffset = 0;     // user specified yScale, apply over system yScale
-        var userYOffset = 0;
+        var userYOffset = 50;
         var lastValues = [];    // keep last values for calculating yScale and yOffset
 
         // current point (x1, y1) previous point
         // (x2, y2) new point
         var x1 = 0, x2 = 0, y1 = 0, y2 = 0;
-
-        var grd=context.createLinearGradient(0,0,50,0);
-        grd.addColorStop(0, 'blue');
-        grd.addColorStop(1, 'red');
 
         function setGridColor(primary, secondary) {
             gridPrimaryColor = primary;
@@ -44,6 +40,10 @@
             context.clearRect(x1, 0, width + delta, canvas.height);
             drawGrid();
             context.restore();
+
+            var grd = context.createLinearGradient(x1,0,x1 + 70,0);
+            grd.addColorStop(0, '#ffffff');
+            grd.addColorStop(1, 'rgba(255, 255, 255, 0)');
             context.fillStyle = grd; //'rgba(255, 255, 255, 0.3)';
             context.fillRect(x1 + width + delta, 0, 50, canvas.height);
         }
