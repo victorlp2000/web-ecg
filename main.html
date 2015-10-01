@@ -30,15 +30,20 @@
     <script type="text/javascript">
         var f_canvas;
         var f_status, f_receive, f_device, f_display, f_queue, f_interval;
+        var deviceId = {};
+        var selectedDevice = null;
         var paint;    // canvas object
 
-        var intervals = [12, 11, 10, 9, 8, 7, 6, 5, 4, 3];
-        var timerInterval = intervals[4];
+        var speed = 3;
+        var intervals = [[1],[1],
+                        [12, 11, 10, 9, 8, 7, 6, 5, 4, 3], /* speed 2 */
+                        [16, 15, 14, 13, 12, 11, 10, 9], /* speed 3 */
+                        ];
+        var timerInterval = intervals[speed][4];
         var timer = null;
         
         var messageData = null;
         var dataIndex = 0;
-        var speed = 2;
 
         var queue = new MessageQueue(20);
         var queuedMsg = 0;
@@ -50,8 +55,18 @@
                 messageHandler: messageHandler,
         }
 
-        //var subscriber = new Subscriber(options);
-        var subscriber = new SubscriberEmulator(options);
+        var emulator = true;
+
+        if (emulator == false) {
+            var subscriber = new Subscriber(options);
+        } else {
+            var subscriber1 = new SubscriberEmulator(options);
+            var subscriber2 = new SubscriberEmulator(options);
+            subscriber1.setDestination('device-1');
+            subscriber2.setDestination('device-2');
+            subscriber1.setValueFactor(10);
+            subscriber2.setValueFactor(20);
+        }
 
         function statusHandler(text) {
             setField(f_status, text);
@@ -61,11 +76,22 @@
             $(field).val(content);
         }
 
+        function setActiveDevice(device) {
+            selectedDevice = device;
+            setField(f_device, device);
+        }
+
         function messageHandler(message) {
             var topic = message.destinationName;
             var payload = message.payloadString;
             var jsonObject = {};
-            setField(f_device, topic);
+            deviceId[topic] = new Date();
+            if (selectedDevice == null) {
+                setActiveDevice(topic);
+            }
+            if (selectedDevice != topic) {
+                return;
+            }
             jsonObject = JSON.parse(payload);
             if (jsonObject.d.packet == undefined) {
                 console.log("ignore...");
@@ -74,8 +100,8 @@
             }
             setField(f_receive, "packet: " + jsonObject.d.packet);
             queuedMsg = queue.putMessage(jsonObject.d);
-            if (queuedMsg < intervals.length)
-                timerInterval = intervals[queuedMsg];
+            if (queuedMsg < intervals[speed].length)
+                timerInterval = intervals[speed][queuedMsg];
             else
                 timerInterval = 1;
             setField(f_interval, timerInterval);
@@ -138,7 +164,12 @@
             paint = new DrawingCanvas(f_canvas);
             //console.log(paint);
             resizeCanvas();
-            subscriber.connect();
+            if (emulator == false) {
+                subscriber.connect();
+            } else {
+                subscriber1.connect();
+                subscriber2.connect();
+            }
         });
     </script>
   </head>

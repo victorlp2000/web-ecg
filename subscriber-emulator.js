@@ -8,22 +8,34 @@
 function  SubscriberEmulator(userOptions) {
 	var options = userOptions;
 	var counter = 0;
-	var n = 10;
+	var factor = 10;
+	var deviceId = 'emulator';
 
 	function getPacket(index) {
 		var packet = {};
 		var data = [];
-		var d = {
-					packet: 0,
-					ecg: { data: data }
-				};
+		var d = { packet: 0, ecg: { data: data }};
 		var i;
 		for (i = 0; i < 200; i++) {
-			data.push(i * n);
+			data.push(i * factor);
 		}
 		d.packet = index;
 		packet["payload"] = { d: d };
-		packet["destinationName"] = "test1";
+		packet["destinationName"] = deviceId;
+		packet["payloadString"] = JSON.stringify(packet.payload);
+		return packet;
+	}
+
+	// for testing very slow case
+	function getPacket1(index) {
+		var packet = {};
+		var data = [];
+		var d = { packet: 0, ecg: { data: data }};
+		var i;
+		data.push(index % 20);
+		d.packet = index;
+		packet["payload"] = { d: d };
+		packet["destinationName"] = deviceId;
 		packet["payloadString"] = JSON.stringify(packet.payload);
 		return packet;
 	}
@@ -31,22 +43,28 @@ function  SubscriberEmulator(userOptions) {
 	function connect() {
 		options.statusHandler("connected to emulator");
 		//setInterval(sendPacket, 1000);
-		setTimeout(sendPacket, 1000);
+		sendPacket(sendPacket, 1000);
 	}
 
 	function sendPacket() {
+		//console.log(deviceId + ": " + counter);
 		options.messageHandler(getPacket(counter));
 		counter ++;
-		if (counter > 10)
-			n = 100;
-		if (counter > 20)
-			n = 10;
-		if (counter < 30)
-			setTimeout(sendPacket, 1000);
+		setTimeout(sendPacket, 1000);
+	}
+
+	function setValueFactor(n) {
+		factor = n;
+	}
+
+	function setDestination(name) {
+		deviceId = name;
 	}
 
 	return {
 		connect: connect,
+		setDestination: setDestination,
+		setValueFactor: setValueFactor
 	}
 }
 /*
