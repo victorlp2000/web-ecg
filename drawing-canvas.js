@@ -14,9 +14,9 @@
         var xOffset = 0;
         var yOffset = 0;        // dynamically changing based on positive/negtive values
         var userXScale = 1;     // user specified yScale, apply over system yScale
-        var userYScale = 0.5;
+        var userYScale = 1;
         var userXOffset = 0;     // user specified yScale, apply over system yScale
-        var userYOffset = 50;
+        var userYOffset = 0;
         var lastN = 2000;
         var minValue = 0, maxValue = 0;
         var lastValues = [];    // keep lastN values for calculating yScale and yOffset
@@ -35,7 +35,7 @@
             start from the current position (x1) for width
         */
         function clearDrawArea(width) {
-            var delta = 20;
+            var delta = 2;
             context.save();
             context.rect(x1, 0, width + delta, canvas.height);
             context.clip();
@@ -95,8 +95,9 @@
                     }
                 }
             }
-            yOffset = -minValue;
-            yScale = canvas.height / (maxValue - minValue);
+            // top/botom margin: 40%
+            yScale = canvas.height * 0.6 / (maxValue - minValue);
+            yOffset = -minValue + canvas.height * 0.2; // bottom 20%
 
             var v = canvas.height - (value * yScale  * userYScale + yOffset + userYOffset);
             return v;

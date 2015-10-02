@@ -30,15 +30,18 @@
     <script type="text/javascript">
         var f_canvas;
         var f_status, f_receive, f_device, f_display, f_queue, f_interval;
-        var deviceId = {};
-        var selectedDevice = null;
+        var f_devicelist;
+        var deviceList = {};
+        var activeDevice = null;
         var paint;    // canvas object
 
+        // intervals for different speed
         var speed = 3;
         var intervals = [[1],[1],
                         [12, 11, 10, 9, 8, 7, 6, 5, 4, 3], /* speed 2 */
                         [16, 15, 14, 13, 12, 11, 10, 9], /* speed 3 */
                         ];
+
         var timerInterval = intervals[speed][4];
         var timer = null;
         
@@ -76,20 +79,30 @@
             $(field).val(content);
         }
 
-        function setActiveDevice(device) {
-            selectedDevice = device;
-            setField(f_device, device);
+        function addDevice(device) {
+            if (activeDevice == null) {
+                activeDevice = device;
+                setField(f_device, device);
+            }
+
+            // maintain device list
+            var list = device;
+            if (deviceList[device] == null) {
+                for (dev in deviceList) {
+                    list += ", " + dev;
+                }
+                setField(f_devicelist, list);
+            }
+            deviceList[device] = new Date();
         }
 
         function messageHandler(message) {
             var topic = message.destinationName;
             var payload = message.payloadString;
             var jsonObject = {};
-            deviceId[topic] = new Date();
-            if (selectedDevice == null) {
-                setActiveDevice(topic);
-            }
-            if (selectedDevice != topic) {
+
+            addDevice(topic);
+            if (activeDevice != topic) {
                 return;
             }
             jsonObject = JSON.parse(payload);
@@ -160,6 +173,7 @@
             f_display = document.getElementById('display');
             f_queue = document.getElementById('queue');
             f_interval = document.getElementById('interval');
+            f_devicelist = document.getElementById('devicelist');
             
             paint = new DrawingCanvas(f_canvas);
             //console.log(paint);
@@ -192,6 +206,9 @@
         
         <div class='name'>Interval:</div>
         <input type='text' class='value' id='interval' readonly></input><br>
+
+        <div class='name'>Device Connected:</div>
+        <input type='text' class='value' id='devicelist' readonly></input><br>
     </div>
     <canvas id="canvas" width="1" height="200"></canvas>
   </body>
