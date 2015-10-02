@@ -2,8 +2,8 @@
         var canvas = canvasElement;
         var context = canvasElement.getContext('2d');
 
-        var gridPrimaryColor = "#222222";    // background color
-        var gridSecondaryColor = "#666666"
+        var gridPrimaryColor = "#fc8c8c";    // background color
+        var gridSecondaryColor = "#ffd9d9"
         var graphColor = "#0000ff";     // graph color
         var cursorColor = "#ff0000";    // cursor color
 
@@ -17,7 +17,9 @@
         var userYScale = 0.5;
         var userXOffset = 0;     // user specified yScale, apply over system yScale
         var userYOffset = 50;
-        var lastValues = [];    // keep last values for calculating yScale and yOffset
+        var lastN = 2000;
+        var minValue = 0, maxValue = 0;
+        var lastValues = [];    // keep lastN values for calculating yScale and yOffset
 
         // current point (x1, y1) previous point
         // (x2, y2) new point
@@ -56,26 +58,42 @@
             context.save();
             context.beginPath();
             context.arc(x1 + r + 1, y1, r, 0, 2 * Math.PI);
-            context.fillStyle = cursorColor;
+            context.fillStyle = graphColor; //cursorColor;
             context.fill();
-            context.strokeStyle = cursorColor;
+            context.strokeStyle = graphColor; //cursorColor;
             context.lineWidth = 2;
             context.stroke();
             context.restore();
         }
 
         function normalize(value) {
-            var minValue, maxValue;
             lastValues.push(value);
-            if (lastValues.length > 200) {
+
+            var shift = null;
+
+            if (lastValues.length > lastN) {
+                shift = lastValues[0];
                 lastValues = lastValues.slice(1);
             }
-            minValue = maxValue = lastValues[0];
-            for (i = 1; i < lastValues.length; i++) {
-                if (lastValues[i] > maxValue)
-                    maxValue = lastValues[i];
-                if (lastValues[i] < minValue)
-                    minValue = lastValues[i];
+
+            // keep only lastN values
+            if (value < minValue) {
+                minValue = value;
+            } else if (value > maxValue) {
+                maxValue = value;
+            } else if (shift != null) {
+                // need to re-calculate minValue/maxValue
+                // only if the value was shifted out
+                if (shift = minValue || shift == maxValue) {
+                    console.log("re-calculate...");
+                    minValue = maxValue = lastValues[0];
+                    for (i = 1; i < lastValues.length; i++) {
+                        if (lastValues[i] > maxValue)
+                            maxValue = lastValues[i];
+                        if (lastValues[i] < minValue)
+                            minValue = lastValues[i];
+                    }
+                }
             }
             yOffset = -minValue;
             yScale = canvas.height / (maxValue - minValue);
@@ -104,7 +122,7 @@
                 context.lineTo(canvas.width, i);
             }
             context.strokeStyle = gridSecondaryColor;
-            context.lineWidth = 0.1;
+            context.lineWidth = 0.8;
             context.stroke();
             context.beginPath();
             for (i = 0; i < canvas.width; i += pixelsPerSecond / 2) {
@@ -116,7 +134,7 @@
                 context.lineTo(canvas.width, i);
             }
             context.strokeStyle = gridPrimaryColor;
-            context.lineWidth = 0.1;
+            context.lineWidth = 0.8;
             context.stroke();
             context.restore();
         }

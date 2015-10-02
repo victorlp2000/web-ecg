@@ -16,6 +16,7 @@ function  SubscriberEmulator(userOptions) {
 		var data = [];
 		var d = { packet: 0, ecg: { data: data }};
 		var i;
+		if (index > 20) factor = 20;
 		for (i = 0; i < 200; i++) {
 			data.push(i * factor);
 		}
@@ -42,8 +43,7 @@ function  SubscriberEmulator(userOptions) {
 
 	function connect() {
 		options.statusHandler("connected to emulator");
-		//setInterval(sendPacket, 1000);
-		sendPacket(sendPacket, 1000);
+		sendPacket();
 	}
 
 	function sendPacket() {
