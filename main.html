@@ -29,8 +29,10 @@
     </style>
     <script type="text/javascript">
         var f_canvas;
-        var f_status, f_receive, f_device, f_display, f_queue, f_interval;
-        var f_devicelist;
+        var f_status, f_receive, f_device, f_display, f_queue,
+            f_interval, f_devicelist;
+        var f_select;
+
         var deviceList = {};
         var activeDevice = null;
         var paint;    // canvas object
@@ -44,6 +46,7 @@
 
         var timerInterval = intervals[speed][4];
         var timer = null;
+        var play = true;    // start/stop palying
         
         var messageData = null;
         var dataIndex = 0;
@@ -79,21 +82,35 @@
             $(field).val(content);
         }
 
-        function addDevice(device) {
-            if (activeDevice == null) {
+        function changeActiveDevice(device) {
+            if (activeDevice != device) {
+                queue.reset();          // reset queue
+                activeDevice = device;
+                messageData = null;     // clear current data
                 activeDevice = device;
                 setField(f_device, device);
+            }
+        }
+
+        function addDevice(device) {
+            if (activeDevice == null) {
+                changeActiveDevice(device);
             }
 
             // maintain device list
             var list = device;
+            var changed = false;
             if (deviceList[device] == null) {
                 for (dev in deviceList) {
                     list += ", " + dev;
                 }
                 setField(f_devicelist, list);
+                changed = true;
             }
             deviceList[device] = new Date();
+            if (changed) {
+                resetDeviceList();
+            }
         }
 
         function messageHandler(message) {
@@ -118,7 +135,8 @@
             else
                 timerInterval = 1;
             setField(f_interval, timerInterval);
-            startShow();
+            setField(f_queue, queuedMsg);
+            startPlay();
         }
 
         var getData = function () {
@@ -143,11 +161,11 @@
                 dataIndex += speed;
             }
             timer = null;
-            startShow();
+            startPlay();
         }
 
-        function startShow() {
-            if (timer == null) {
+        function startPlay() {
+            if (timer == null && play == true) {
                 timer = setTimeout(getData, timerInterval);
             }
         }
@@ -159,6 +177,53 @@
             canvasWidth = w - f_canvas.offsetLeft * 2;
             f_canvas.width = canvasWidth;
             paint.clearCanvas();
+        }
+
+        // button event handler
+        function onStart() {
+            if (this.value == 'Stop') {
+                play = false;
+                this.value = 'Start';
+            } else {
+                play = true;
+                startPlay();
+                this.value = 'Stop';
+            }
+            console.log('play: ' + play);
+        }
+
+        // select active device
+        function setActiveDevice(devie) {
+            var options = f_select.options;
+            for (var i = 0; i < options.length; i++) {
+                if (options[i].innerHTML === device) {
+                    f_select.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+
+        // change active device
+        function onChangeDevice() {
+            var index = f_select.selectedIndex;
+            var device = f_select.options[index].innerHTML;
+
+            changeActiveDevice(device);
+            if (play == false) {
+                f_start.click();
+            }
+        }
+
+        // called whenever device list is changed
+        function resetDeviceList() {
+            var html = '';
+            console.log('---' + deviceList.length);
+            for (dev in deviceList) {
+                html += '<option value="' + dev + '">' + dev + '</option>';
+            }
+            console.log(html);
+            f_select.innerHTML = html;
+            setActiveDevice(activeDevice);
         }
 
         window.onresize = function(event) {
@@ -174,6 +239,12 @@
             f_queue = document.getElementById('queue');
             f_interval = document.getElementById('interval');
             f_devicelist = document.getElementById('devicelist');
+
+            f_start = document.getElementById('start');
+            f_select = document.getElementById('select');
+
+            f_start.addEventListener('click', onStart);
+            f_select.addEventListener('change', onChangeDevice);
             
             paint = new DrawingCanvas(f_canvas);
             //console.log(paint);
@@ -211,5 +282,12 @@
         <input type='text' class='value' id='devicelist' readonly></input><br>
     </div>
     <canvas id="canvas" width="1" height="200"></canvas>
+    <input type='button' id="start" value='Stop'></input>
+    <select id='select'></select>
+    <input type='button' id="move_up" value="Up"></input>
+    <input type='button' id="move_down" value="Down"></input>
+    <input type='button' id="narrow" value="Narrow"></input>
+    <input type='button' id="wide" value="Wide"></input>
+    <input type='button' id="reset" value="Reset"></input>
   </body>
 </html>
