@@ -23,7 +23,7 @@
             color: blue;
         }
         #canvas {
-            border:3px solid #000000;
+            border:3px solid #fc8c8c;
             background-color: #ffffff;
         }
     </style>
@@ -31,8 +31,7 @@
         var f_canvas;
         var f_status, f_receive, f_device, f_display, f_queue,
             f_interval, f_devicelist;
-        var f_select;
-
+        var f_start, f_setdevice, f_yscale, f_yoffset;
         var deviceList = {};
         var activeDevice = null;
         var paint;    // canvas object
@@ -70,8 +69,8 @@
             var subscriber2 = new SubscriberEmulator(options);
             subscriber1.setDestination('device-1');
             subscriber2.setDestination('device-2');
-            subscriber1.setValueFactor(10);
-            subscriber2.setValueFactor(20);
+            subscriber1.setWaveType('saw');
+            subscriber2.setWaveType('sin');
         }
 
         function statusHandler(text) {
@@ -89,6 +88,7 @@
                 messageData = null;     // clear current data
                 activeDevice = device;
                 setField(f_device, device);
+                paint.reset();
             }
         }
 
@@ -194,10 +194,10 @@
 
         // select active device
         function setActiveDevice(devie) {
-            var options = f_select.options;
+            var options = f_setdevice.options;
             for (var i = 0; i < options.length; i++) {
                 if (options[i].innerHTML === device) {
-                    f_select.selectedIndex = i;
+                    f_setdevice.selectedIndex = i;
                     break;
                 }
             }
@@ -205,24 +205,35 @@
 
         // change active device
         function onChangeDevice() {
-            var index = f_select.selectedIndex;
-            var device = f_select.options[index].innerHTML;
+            var index = f_setdevice.selectedIndex;
+            var value = f_setdevice.options[index].value;
 
-            changeActiveDevice(device);
+            changeActiveDevice(value);
             if (play == false) {
                 f_start.click();
             }
         }
 
+        function onChangeYScale() {
+            var index = f_yscale.selectedIndex;
+            var value = f_yscale.options[index].value;
+            paint.setUserYScale(parseFloat(value));
+        }
+
+        function onChangeYOffset() {
+            var index = f_yoffset.selectedIndex;
+            var value = f_yoffset.options[index].value;
+            paint.setUserYOffsetPercent(parseFloat(value));            
+        }
+
         // called whenever device list is changed
         function resetDeviceList() {
             var html = '';
-            console.log('---' + deviceList.length);
             for (dev in deviceList) {
                 html += '<option value="' + dev + '">' + dev + '</option>';
             }
             console.log(html);
-            f_select.innerHTML = html;
+            f_setdevice.innerHTML = html;
             setActiveDevice(activeDevice);
         }
 
@@ -241,10 +252,14 @@
             f_devicelist = document.getElementById('devicelist');
 
             f_start = document.getElementById('start');
-            f_select = document.getElementById('select');
+            f_setdevice = document.getElementById('set_device');
+            f_yscale = document.getElementById('yscale');
+            f_yoffset = document.getElementById('yoffset');
 
             f_start.addEventListener('click', onStart);
-            f_select.addEventListener('change', onChangeDevice);
+            f_setdevice.addEventListener('change', onChangeDevice);
+            f_yscale.addEventListener('change', onChangeYScale);
+            f_yoffset.addEventListener('change', onChangeYOffset);
             
             paint = new DrawingCanvas(f_canvas);
             //console.log(paint);
@@ -262,32 +277,37 @@
     <div>
         <div class='name'>Status:</div>
         <input type='text' class='value' id='status' readonly></input><br>
-        
         <div class='name'>Receive:</div>
         <input type='text' class='value' id='receive' readonly></input><br>
-        
         <div class='name'>Device:</div>
         <input type='text' class='value' id='device' readonly></input><br>
-        
         <div class='name'>Display:</div>
         <input type='text' class='value' id='display' readonly></input><br>
-        
         <div class='name'>Queue:</div>
         <input type='text' class='value' id='queue' readonly></input><br>
-        
         <div class='name'>Interval:</div>
         <input type='text' class='value' id='interval' readonly></input><br>
-
-        <div class='name'>Device Connected:</div>
+        <div class='name'>Connected:</div>
         <input type='text' class='value' id='devicelist' readonly></input><br>
     </div>
     <canvas id="canvas" width="1" height="200"></canvas>
     <input type='button' id="start" value='Stop'></input>
-    <select id='select'></select>
-    <input type='button' id="move_up" value="Up"></input>
-    <input type='button' id="move_down" value="Down"></input>
-    <input type='button' id="narrow" value="Narrow"></input>
-    <input type='button' id="wide" value="Wide"></input>
-    <input type='button' id="reset" value="Reset"></input>
+    <select id='set_device'></select>
+    <select id='yscale'>
+        <option value='1'>user Y scale</option>
+        <option value='2'>2</option>
+        <option value='1.5'>1.5</option>
+        <option value='1'>1</option>
+        <option value='0.75'>0.75</option>
+        <option value='0.5'>0.5</option>
+        </select>
+    <select id='yoffset'>
+        <option value='0'>user Y offset</option>
+        <option value='50'>+50%</option>
+        <option value='25'>+25%</option>
+        <option value='0'>0</option>
+        <option value='-25'>-25%</option>
+        <option value='-50'>-50%</option>
+        </select>
   </body>
 </html>

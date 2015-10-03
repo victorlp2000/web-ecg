@@ -25,6 +25,16 @@
         // (x2, y2) new point
         var x1 = 0, x2 = 0, y1 = 0, y2 = 0;
 
+        function reset() {
+            xScale = 1;
+            yScale = 1;
+            xOffset = 0;
+            yOffset = 0; 
+            minValue = maxValue = 0;
+            lastValues = [];
+            clearCanvas();
+        }
+
         function setGridColor(primary, secondary) {
             gridPrimaryColor = primary;
             gridSecondaryColor = secondary;
@@ -70,6 +80,7 @@
             lastValues.push(value);
 
             var shift = null;
+            var changed = false;
 
             if (lastValues.length > lastN) {
                 shift = lastValues[0];
@@ -79,13 +90,15 @@
             // keep only lastN values
             if (value < minValue) {
                 minValue = value;
+                changed = true;
             } else if (value > maxValue) {
                 maxValue = value;
+                changed = true;
             } else if (shift != null) {
                 // need to re-calculate minValue/maxValue
                 // only if the value was shifted out
                 if (shift = minValue || shift == maxValue) {
-                    console.log("re-calculate...");
+                    changed = true;
                     minValue = maxValue = lastValues[0];
                     for (i = 1; i < lastValues.length; i++) {
                         if (lastValues[i] > maxValue)
@@ -95,10 +108,12 @@
                     }
                 }
             }
-            // top/botom margin: 40%
-            yScale = canvas.height * 0.6 / (maxValue - minValue);
-            yOffset = -minValue + canvas.height * 0.2; // bottom 20%
-
+            if (changed) {
+                yScale = canvas.height * 0.6 / (maxValue - minValue);
+                // center
+                yOffset = (canvas.height - (maxValue - minValue) * yScale * userYScale) / 2;
+                yOffset += - minValue * yScale * userYScale;
+            }
             var v = canvas.height - (value * yScale  * userYScale + yOffset + userYOffset);
             return v;
         }
@@ -171,10 +186,50 @@
             context.lineWidth = 2;
             context.stroke();
             drawCursor();
+            drawInfo();
         }
+
+        function drawInfo() {
+            var msgs = [
+                "Max: " + maxValue.toFixed(2),
+                "Min: " + minValue.toFixed(2),
+                "xScale: " + xScale.toFixed(2),
+                "yScale: " + yScale.toFixed(2),
+                "xOffset: " + xOffset.toFixed(2),
+                "yOffset: " + yOffset.toFixed(2),
+                "userYOffset: " + userYOffset.toFixed(2),
+                ];
+            var i;
+            var width = 0;
+            var height = 10;
+            var w;
+            context.fillStyle = "black";
+            context.font = "12px Arial";
+            for (i = 0; i < msgs.length; i++) {
+                w =  context.measureText(msgs[i]).width;
+                if (w > width)
+                    width = w;
+            }
+            context.clearRect(10, 10, width, height * msgs.length);
+            for (i = 0; i < msgs.length; i++) {
+                context.fillText(msgs[i], 10, i * height + 20);
+            }
+        }
+
+        function setUserYScale(v) {
+            userYScale = v;
+        }
+
+        function setUserYOffsetPercent(percent) {
+            userYOffset = canvas.height * percent / 100;
+        }
+
         return {
             setGridColor: setGridColor,
             clearCanvas: clearCanvas,
             drawData: drawData,
+            reset: reset,
+            setUserYScale: setUserYScale,
+            setUserYOffsetPercent: setUserYOffsetPercent,
         }
     }

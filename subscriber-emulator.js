@@ -10,15 +10,21 @@ function  SubscriberEmulator(userOptions) {
 	var counter = 0;
 	var factor = 10;
 	var deviceId = 'emulator';
+	var wave = 'saw';
 
 	function getPacket(index) {
 		var packet = {};
 		var data = [];
 		var d = { packet: 0, ecg: { data: data }};
 		var i;
-		if (index > 20) factor = 20;
-		for (i = 0; i < 200; i++) {
-			data.push(i * factor);
+		if (wave == 'saw') {
+			for (i = 0; i < 200; i++) {
+				data.push(i * factor);
+			}
+		} else if (wave == 'sin') {
+			for (i = 0; i < 200; i++) {
+				data.push(Math.sin(Math.PI * 2 * i / 200));
+			}
 		}
 		d.packet = index;
 		packet["payload"] = { d: d };
@@ -61,10 +67,15 @@ function  SubscriberEmulator(userOptions) {
 		deviceId = name;
 	}
 
+	function setWaveType(type) {
+		wave = type;
+	}
+
 	return {
 		connect: connect,
 		setDestination: setDestination,
-		setValueFactor: setValueFactor
+		setValueFactor: setValueFactor,
+		setWaveType: setWaveType,
 	}
 }
 /*
