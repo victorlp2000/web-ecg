@@ -60,7 +60,7 @@
                 messageHandler: messageHandler,
         }
 
-        var emulator = true;
+        var emulator = false;
 
         if (emulator == false) {
             var subscriber = new Subscriber(options);
@@ -101,13 +101,9 @@
             var list = device;
             var changed = false;
             if (deviceList[device] == null) {
-                for (dev in deviceList) {
-                    list += ", " + dev;
-                }
-                setField(f_devicelist, list);
                 changed = true;
             }
-            deviceList[device] = new Date();
+            deviceList[device] = Date.now();
             if (changed) {
                 resetDeviceList();
             }
@@ -196,7 +192,7 @@
         function setActiveDevice(devie) {
             var options = f_setdevice.options;
             for (var i = 0; i < options.length; i++) {
-                if (options[i].innerHTML === device) {
+                if (options[i].value === device) {
                     f_setdevice.selectedIndex = i;
                     break;
                 }
@@ -228,18 +224,40 @@
 
         // called whenever device list is changed
         function resetDeviceList() {
-            var html = '';
+            var html = '<option value="device">device</option>';
+            var list = '';
             for (dev in deviceList) {
                 html += '<option value="' + dev + '">' + dev + '</option>';
+                list += ', ' + dev;
             }
-            console.log(html);
             f_setdevice.innerHTML = html;
+            if (list != '') {
+                setField(f_devicelist, list.substring(2));
+            }
             setActiveDevice(activeDevice);
         }
 
         window.onresize = function(event) {
             resizeCanvas();
         }
+
+        // remove device is there is no event in 2 seconds
+        setInterval(function() {
+            var dev;
+            var now = Date.now();
+            var changed = false;
+            for (dev in deviceList) {
+                console.log(dev + ": " + deviceList[dev] + " " + now);
+                if (now - deviceList[dev] > 2000) {
+                    delete deviceList[dev];
+                    changed = true;
+                    console.log('deleted: ' + dev);
+                }
+            }
+            if (changed) {
+                resetDeviceList();
+            }
+        }, 2000);
 
         $(document).ready(function() {
             f_canvas = document.getElementById('canvas');
@@ -264,6 +282,7 @@
             paint = new DrawingCanvas(f_canvas);
             //console.log(paint);
             resizeCanvas();
+
             if (emulator == false) {
                 subscriber.connect();
             } else {
