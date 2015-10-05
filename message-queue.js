@@ -164,21 +164,25 @@ function MessageQueue(maxItems) {
         return getNumberOfMessages();
     }
 
-    function save() {
-        var saveHead = head;
-        var saveTail = tail;
+    /* we don't just save data in queue, we like to save all data in queue buffer
+        that's from current head back to whole queue buffer
+     */
+    function save(callback) {
+        var tmpHead = next(tail);
+        var tmpTail = tail;
         var msg;
         var msgs = 0;
+
+        // save from tail + 1 to tail
         console.log("saving...");
-        while (head != tail) {
-            msg = getMessage();
+        while (tmpHead != tmpTail) {
+            msg = queue[tmpHead];
             if (msg != null) {
-                console.log(msg);
+                callback(msg);
                 msgs ++;
             }
+            tmpHead = next(tmpHead);
         }
-        head = saveHead;
-        tail = saveTail;
         console.log("--saved: " + msgs);
         return msgs;
     }

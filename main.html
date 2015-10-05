@@ -60,7 +60,7 @@
                 messageHandler: messageHandler,
         }
 
-        var emulator = false;
+        var emulator = true;
 
         if (emulator == false) {
             var subscriber = new Subscriber(options);
@@ -237,6 +237,13 @@
             setActiveDevice(activeDevice);
         }
 
+        function onSave() {
+            var n = queue.save(function(packet) {
+                console.log(JSON.stringify(packet));
+            });
+            console.log('finished:' + n);
+        }
+
         window.onresize = function(event) {
             resizeCanvas();
         }
@@ -247,7 +254,6 @@
             var now = Date.now();
             var changed = false;
             for (dev in deviceList) {
-                console.log(dev + ": " + deviceList[dev] + " " + now);
                 if (now - deviceList[dev] > 2000) {
                     delete deviceList[dev];
                     changed = true;
@@ -273,12 +279,13 @@
             f_setdevice = document.getElementById('set_device');
             f_yscale = document.getElementById('yscale');
             f_yoffset = document.getElementById('yoffset');
+            f_save = document.getElementById('save');
 
             f_start.addEventListener('click', onStart);
             f_setdevice.addEventListener('change', onChangeDevice);
             f_yscale.addEventListener('change', onChangeYScale);
             f_yoffset.addEventListener('change', onChangeYOffset);
-            
+            f_save.addEventListener('click', onSave);
             paint = new DrawingCanvas(f_canvas);
             //console.log(paint);
             resizeCanvas();
@@ -328,5 +335,6 @@
         <option value='-25'>-25%</option>
         <option value='-50'>-50%</option>
         </select>
+    <input type='button' id='save' value='Save'></input>
   </body>
 </html>
