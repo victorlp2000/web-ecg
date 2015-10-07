@@ -8,3 +8,5 @@ password = null;
 // username = "jjolie";
 // password = "aa";
 cleansession = true;
+
+serverUrl = 'http://dev.cloudemist.com:8080';

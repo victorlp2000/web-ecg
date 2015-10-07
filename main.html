@@ -246,7 +246,7 @@
             setActiveDevice(activeDevice);
         }
 
-        function onSave() {
+        function onSnapshot() {
             viewData = {
                 cid: '',
                 lpt: -1,
@@ -308,13 +308,13 @@
             f_setdevice = document.getElementById('set_device');
             f_yscale = document.getElementById('yscale');
             f_yoffset = document.getElementById('yoffset');
-            f_save = document.getElementById('save');
+            f_snapshot = document.getElementById('snapshot');
 
             f_start.addEventListener('click', onStart);
             f_setdevice.addEventListener('change', onChangeDevice);
             f_yscale.addEventListener('change', onChangeYScale);
             f_yoffset.addEventListener('change', onChangeYOffset);
-            f_save.addEventListener('click', onSave);
+            f_snapshot.addEventListener('click', onSnapshot);
             paint = new DrawingCanvas(f_canvas);
             view = new DrawingCanvas(f_viewcanvas);
             //console.log(paint);
@@ -351,9 +351,8 @@
         <div class='name'>Connected:</div>
         <input type='text' class='lvalue' id='devicelist' readonly></input>
     </div>
-    <div width='100%'>
-        <canvas id='canvas' height='200'></canvas>
-    </div>
+
+    <p>
     <input type='button' id="start" value='Pause'></input>
     <select id='set_device'></select>
     <select id='yscale'>
@@ -372,7 +371,20 @@
         <option value='-25'>-25%</option>
         <option value='-50'>-50%</option>
         </select>
-    <input type='button' id='save' value='Snapshot'></input>
+    <input type='button' id='snapshot' value='Snapshot'></input>
+    <div width='100%'>
+        <canvas id='canvas' height='200'></canvas>
+    </div>
+
+    <p>
+    <input type='text' id='uidlist' value='user id' title='input partial user id to get packets'></input>
+    <select id='selectuid'>
+        <option value='user'>select user</option>
+    </select>
+    <select id='selectlpt'>
+        <option value='lpt'>select packet time</option>
+    </select>
+    <input type='button' value='Save'></input>
     <div id='viewport' width='100%' height='200' style='overflow-x:scroll;overflow-y:hidden;'>
         <canvas id='viewcanvas' width='4000' height='200'></canvas>
     </div>
