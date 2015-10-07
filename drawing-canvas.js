@@ -9,6 +9,7 @@
 
         // to fix graph in window, value need to be normalized:
         // yScale change size, yOffset change position
+        var autoScale = true;
         var xScale = 1;
         var yScale = 1;         // dynamically changing based on maxValue/minValue
         var xOffset = 0;
@@ -77,42 +78,44 @@
         }
 
         function normalize(value) {
-            lastValues.push(value);
+            if (autoScale == true) {
+                lastValues.push(value);
 
-            var shift = null;
-            var changed = false;
+                var shift = null;
+                var changed = false;
 
-            if (lastValues.length > lastN) {
-                shift = lastValues[0];
-                lastValues = lastValues.slice(1);
-            }
+                if (lastValues.length > lastN) {
+                    shift = lastValues[0];
+                    lastValues = lastValues.slice(1);
+                }
 
-            // keep only lastN values
-            if (value < minValue) {
-                minValue = value;
-                changed = true;
-            } else if (value > maxValue) {
-                maxValue = value;
-                changed = true;
-            } else if (shift != null) {
-                // need to re-calculate minValue/maxValue
-                // only if the value was shifted out
-                if (shift = minValue || shift == maxValue) {
+                // keep only lastN values
+                if (value < minValue) {
+                    minValue = value;
                     changed = true;
-                    minValue = maxValue = lastValues[0];
-                    for (i = 1; i < lastValues.length; i++) {
-                        if (lastValues[i] > maxValue)
-                            maxValue = lastValues[i];
-                        if (lastValues[i] < minValue)
-                            minValue = lastValues[i];
+                } else if (value > maxValue) {
+                    maxValue = value;
+                    changed = true;
+                } else if (shift != null) {
+                    // need to re-calculate minValue/maxValue
+                    // only if the value was shifted out
+                    if (shift = minValue || shift == maxValue) {
+                        changed = true;
+                        minValue = maxValue = lastValues[0];
+                        for (i = 1; i < lastValues.length; i++) {
+                            if (lastValues[i] > maxValue)
+                                maxValue = lastValues[i];
+                            if (lastValues[i] < minValue)
+                                minValue = lastValues[i];
+                        }
                     }
                 }
-            }
-            if (changed) {
-                yScale = canvas.height * 0.6 / (maxValue - minValue);
-                // center
-                yOffset = (canvas.height - (maxValue - minValue) * yScale * userYScale) / 2;
-                yOffset += - minValue * yScale * userYScale;
+                if (changed) {
+                    yScale = canvas.height * 0.6 / (maxValue - minValue);
+                    // center
+                    yOffset = (canvas.height - (maxValue - minValue) * yScale * userYScale) / 2;
+                    yOffset += - minValue * yScale * userYScale;
+                }
             }
             var v = canvas.height - (value * yScale  * userYScale + yOffset + userYOffset);
             return v;
@@ -224,6 +227,38 @@
             userYOffset = canvas.height * percent / 100;
         }
 
+        function setAutoScale(v) {
+            autoScale = v;
+        }
+
+        function getMax() {
+            return {min: minValue, max:maxValue}
+        }
+
+        function setMax(value) {
+            minValue = value.min;
+            maxValue = value.max;
+        }
+
+        function setScale(scale) {
+            xScale = scale.x;
+            yScale = scale.y;
+            console.log('scale: ' + xScale + ", " + yScale);
+        }
+
+        function getScale() {
+            return {x: xScale, y:yScale}
+        }
+
+        function getOffset() {
+            return {x: xOffset, y: yOffset};
+        }
+
+        function setOffset(offset) {
+            xOffset = offset.x;
+            yOffset = offset.y;
+        }
+        
         return {
             setGridColor: setGridColor,
             clearCanvas: clearCanvas,
@@ -231,5 +266,12 @@
             reset: reset,
             setUserYScale: setUserYScale,
             setUserYOffsetPercent: setUserYOffsetPercent,
+            setAutoScale: setAutoScale,
+            getMax: getMax,
+            setMax: setMax,
+            getScale: getScale,
+            setScale: setScale,
+            getOffset: getOffset,
+            setOffset: setOffset,
         }
     }

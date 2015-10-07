@@ -22,19 +22,19 @@
             border: 0px;
             color: blue;
         }
-        #canvas {
+        canvas {
             border:3px solid #fc8c8c;
             background-color: #ffffff;
         }
     </style>
     <script type="text/javascript">
-        var f_canvas;
+        var f_canvas, f_viewport, f_viewcanvas;
         var f_status, f_receive, f_device, f_display, f_queue,
             f_interval, f_devicelist;
         var f_start, f_setdevice, f_yscale, f_yoffset;
         var deviceList = {};
         var activeDevice = null;
-        var paint;    // canvas object
+        var paint, view;    // canvas object
 
         // intervals for different speed
         var speed = 3;
@@ -54,11 +54,17 @@
         var queuedMsg = 0;
 
         var options = {
-                host: host,
-                port: port,
-                statusHandler: statusHandler,
-                messageHandler: messageHandler,
+            host: host,
+            port: port,
+            statusHandler: statusHandler,
+            messageHandler: messageHandler,
         }
+        var viewData = {
+            cid: '',
+            lpt: -1,
+            data: []
+        }
+
 
         var emulator = true;
 
@@ -172,18 +178,20 @@
                 w = 200;    // minimum width
             canvasWidth = w - f_canvas.offsetLeft * 2;
             f_canvas.width = canvasWidth;
+            f_viewport.width = canvasWidth;
             paint.clearCanvas();
+            view.clearCanvas();
         }
 
         // button event handler
         function onStart() {
-            if (this.value == 'Stop') {
+            if (this.value == 'Pause') {
                 play = false;
-                this.value = 'Start';
+                this.value = 'Play';
             } else {
                 play = true;
                 startPlay();
-                this.value = 'Stop';
+                this.value = 'Pause';
             }
             console.log('play: ' + play);
         }
@@ -238,10 +246,23 @@
         }
 
         function onSave() {
-            var n = queue.save(function(packet) {
-                console.log(JSON.stringify(packet));
+            viewData.cid = activeDevice;
+            viewData.lpt = -1;
+            viewData.data = [];
+            queue.save(function(packet) {
+                if (viewData.lpt == -1) {
+                    viewData.lpt = packet.ecg.start_ecg;
+                }
+                viewData.data = viewData.data.concat(packet.ecg.data);
+                //console.log(JSON.stringify(packet));
             });
-            console.log('finished:' + n);
+            view.width = viewData.data.length;
+            view.reset();
+            view.setAutoScale(false);
+            view.setMax(paint.getMax());
+            view.setScale(paint.getScale());
+            view.setOffset(paint.getOffset());
+            view.drawData(viewData.data);
         }
 
         window.onresize = function(event) {
@@ -274,6 +295,8 @@
             f_queue = document.getElementById('queue');
             f_interval = document.getElementById('interval');
             f_devicelist = document.getElementById('devicelist');
+            f_viewport = document.getElementById('viewport');
+            f_viewcanvas = document.getElementById('viewcanvas');
 
             f_start = document.getElementById('start');
             f_setdevice = document.getElementById('set_device');
@@ -287,6 +310,7 @@
             f_yoffset.addEventListener('change', onChangeYOffset);
             f_save.addEventListener('click', onSave);
             paint = new DrawingCanvas(f_canvas);
+            view = new DrawingCanvas(f_viewcanvas);
             //console.log(paint);
             resizeCanvas();
 
@@ -317,7 +341,7 @@
         <input type='text' class='value' id='devicelist' readonly></input><br>
     </div>
     <canvas id="canvas" width="1" height="200"></canvas>
-    <input type='button' id="start" value='Stop'></input>
+    <input type='button' id="start" value='Pause'></input>
     <select id='set_device'></select>
     <select id='yscale'>
         <option value='1'>user Y scale</option>
@@ -335,6 +359,9 @@
         <option value='-25'>-25%</option>
         <option value='-50'>-50%</option>
         </select>
-    <input type='button' id='save' value='Save'></input>
+    <input type='button' id='save' value='Snapshot'></input>
+    <div id='viewport' width='100%' height='200' style='overflow-x:scroll;overflow-y:hidden;'>
+        <canvas id='viewcanvas' width='4000' height='200'></canvas>
+    </div>
   </body>
 </html>
