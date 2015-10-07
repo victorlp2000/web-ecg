@@ -29,7 +29,7 @@ using circle buffer as queue, like:
  *  maxItems - maximum number of items keep in queue
  */
 function MessageQueue(maxItems) {
-    var queue = new Array();
+    var queue = [];
     var queueSize = maxItems || 10;
     var lastPacket = -1;
     var head = 0;   // point to head in queue
@@ -91,6 +91,10 @@ function MessageQueue(maxItems) {
     }
 
     function reset() {
+        var i;
+        for (i = 0; i < queueSize; i ++) {
+            queue[i] = null;
+        }
         head = tail = 0;
         return;
     }
@@ -195,6 +199,7 @@ function MessageQueue(maxItems) {
         }
         return null;
     }
+
     return {
         printMap: printMap,
         getHead: getHead,

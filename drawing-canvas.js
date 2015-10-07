@@ -189,7 +189,9 @@
             context.lineWidth = 2;
             context.stroke();
             drawCursor();
-            drawInfo();
+            if (autoScale) {
+                drawInfo();
+            }
         }
 
         function drawInfo() {
@@ -213,10 +215,15 @@
                 if (w > width)
                     width = w;
             }
-            context.clearRect(10, 10, width, height * msgs.length);
+            context.clearRect(10, 10, width + 4, height * msgs.length);
+            //context.fillStyle = 'rgba(255, 255, 0, 0.2)';
+            //context.fillRect(10, 10, width + 4, height * msgs.length);
+            context.fillStyle = "#000000";
             for (i = 0; i < msgs.length; i++) {
-                context.fillText(msgs[i], 10, i * height + 20);
+                context.fillText(msgs[i], 12, i * height + 20);
             }
+            context.clearRect(90, canvas.height - 18, 25, 30);
+            context.fillText('0.5s', 90, canvas.height - 5);
         }
 
         function setUserYScale(v) {

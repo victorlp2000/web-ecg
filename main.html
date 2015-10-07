@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
   <head>
-    <title>Mosquitto Websockets</title>
+    <title>ECG Monitor</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="mqttws31.js" type="text/javascript"></script>
     <script src="jquery.min.js" type="text/javascript"></script>
@@ -12,15 +12,19 @@
     <script src="drawing-canvas.js" type="text/javascript"></script>
     <style>
         .name {
-            width:6em;
-            display:inline-block;
+            width: 5em;
             color: green;
+            display: inline-block;
         }
         .value {
-            width:40em;
-            display:inline-block;
-            border: 0px;
+            width: 70%;
             color: blue;
+            border: 0px;
+        }
+        .lvalue {
+            width: 85%;
+            color: blue;
+            border: 0px;
         }
         canvas {
             border:3px solid #fc8c8c;
@@ -59,12 +63,7 @@
             statusHandler: statusHandler,
             messageHandler: messageHandler,
         }
-        var viewData = {
-            cid: '',
-            lpt: -1,
-            data: []
-        }
-
+        var viewData = null;
 
         var emulator = true;
 
@@ -155,7 +154,7 @@
                 timer = null;
                 return;
             }
-            setField(f_display, messageData.packet);
+            setField(f_display, 'packet: ' + messageData.packet);
             setField(f_queue, queue.getNumberOfMessages());
             if (messageData.ecg.data.length > dataIndex) {
                 var values = messageData.ecg.data.slice(dataIndex, dataIndex + speed);
@@ -177,10 +176,12 @@
             if (w < 200)
                 w = 200;    // minimum width
             canvasWidth = w - f_canvas.offsetLeft * 2;
-            f_canvas.width = canvasWidth;
-            f_viewport.width = canvasWidth;
+            f_canvas.width = f_canvas.parentElement.clientWidth - 6;
             paint.clearCanvas();
             view.clearCanvas();
+            if (viewData != null) {
+                view.drawData(viewData.data);
+            }
         }
 
         // button event handler
@@ -246,6 +247,11 @@
         }
 
         function onSave() {
+            viewData = {
+                cid: '',
+                lpt: -1,
+                data: []
+            }
             viewData.cid = activeDevice;
             viewData.lpt = -1;
             viewData.data = [];
@@ -324,23 +330,30 @@
     </script>
   </head>
   <body>
-    <div>
+    <center><h1>ECG Monitor</h1></center>
+    <div style='float:left;width:50%;display:inline-block'>
         <div class='name'>Status:</div>
         <input type='text' class='value' id='status' readonly></input><br>
         <div class='name'>Receive:</div>
         <input type='text' class='value' id='receive' readonly></input><br>
-        <div class='name'>Device:</div>
-        <input type='text' class='value' id='device' readonly></input><br>
         <div class='name'>Display:</div>
         <input type='text' class='value' id='display' readonly></input><br>
+    </div>
+    <div style='float:left;width:50%;display:inline-block'>
+        <div class='name'>Device:</div>
+        <input type='text' class='value' id='device' readonly></input><br>
         <div class='name'>Queue:</div>
         <input type='text' class='value' id='queue' readonly></input><br>
         <div class='name'>Interval:</div>
         <input type='text' class='value' id='interval' readonly></input><br>
-        <div class='name'>Connected:</div>
-        <input type='text' class='value' id='devicelist' readonly></input><br>
     </div>
-    <canvas id="canvas" width="1" height="200"></canvas>
+    <div style='width:100%'>
+        <div class='name'>Connected:</div>
+        <input type='text' class='lvalue' id='devicelist' readonly></input>
+    </div>
+    <div width='100%'>
+        <canvas id='canvas' height='200'></canvas>
+    </div>
     <input type='button' id="start" value='Pause'></input>
     <select id='set_device'></select>
     <select id='yscale'>
