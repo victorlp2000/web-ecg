@@ -1,6 +1,6 @@
 // host = '172.16.153.122';	// hostname or IP address
-host = 'dev.cloudemist.com';	// hostname or IP address
-port = 1885;
+host = '120.25.86.124';	// hostname or IP address
+port = 1880;
 topic = '#';		// topic to subscribe to
 useTLS = false;
 username = null;

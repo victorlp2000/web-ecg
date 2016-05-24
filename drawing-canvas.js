@@ -1,4 +1,4 @@
-    function DrawingCanvas(canvasElement) {
+    function DrawingCanvas(canvasElement, pixelsPerSecond) {
         var canvas = canvasElement;
         var context = canvasElement.getContext('2d');
 
@@ -129,32 +129,46 @@
         }
 
         function drawGrid() {
-            var pixelsPerSecond = 1000 / 5 * xScale;
+            var i, center;
             context.save();
             context.beginPath();
-            for (i = 0; i < canvas.width; i += pixelsPerSecond / 20) {
+            // vertical grid lines
+            for (i = 0; i < canvas.width; i += pixelsPerSecond / 25) {
                 context.moveTo(i, 0);
                 context.lineTo(i, canvas.height);
             }
-            for (i = 0; i < canvas.height; i += pixelsPerSecond / 20) {
-                context.moveTo(0, i);
-                context.lineTo(canvas.width, i);
+            // horizontal grid lines
+            center = canvas.height / 2;
+            for (i = 0; i < center; i += pixelsPerSecond / 25) {
+                context.moveTo(0, center - i);
+                context.lineTo(canvas.width, center - i);
+                if (i != 0) {
+                    context.moveTo(0, center + i);
+                    context.lineTo(canvas.width, center + i);
+                }
             }
             context.strokeStyle = gridSecondaryColor;
             context.lineWidth = 0.8;
             context.stroke();
+
             context.beginPath();
-            for (i = 0; i < canvas.width; i += pixelsPerSecond / 2) {
+            for (i = 0; i < canvas.width; i += pixelsPerSecond / 5) {
                 context.moveTo(i, 0);
                 context.lineTo(i, canvas.height);
             }
-            for (i = 0; i < canvas.height; i += pixelsPerSecond / 2) {
-                context.moveTo(0, i);
-                context.lineTo(canvas.width, i);
+            center = canvas.height / 2;
+            for (i = 0; i < center; i += pixelsPerSecond / 5) {
+                context.moveTo(0, center - i);
+                context.lineTo(canvas.width, center - i);
+                if (i != 0) {
+                    context.moveTo(0, center + i);
+                    context.lineTo(canvas.width, center + i);
+                }
             }
             context.strokeStyle = gridPrimaryColor;
             context.lineWidth = 0.8;
             context.stroke();
+
             context.restore();
         }
 
@@ -168,12 +182,13 @@
                 index ++;
                 //clearCanvas();
             }
-            clearDrawArea(values.length);
+            var pixelsPerDataItem = 1;
+            clearDrawArea(values.length * pixelsPerDataItem);
             context.beginPath();
             context.moveTo(x1, y1);
 
             while (index < values.length) {
-                x2 = x1 + 1;
+                x2 = x1 + pixelsPerDataItem;
                 y2 = normalize(values[index]);
                 index ++;
                 context.lineTo(x2, y2);
@@ -222,8 +237,16 @@
             for (i = 0; i < msgs.length; i++) {
                 context.fillText(msgs[i], 12, i * height + 20);
             }
-            context.clearRect(90, canvas.height - 18, 25, 30);
-            context.fillText('0.5s', 90, canvas.height - 5);
+
+            // draw grid unit
+            var text = '0.2s';
+            w = context.measureText(text);
+            var x = pixelsPerSecond / 5 - (w.width / 2);
+            var h = 15;
+            context.clearRect(x, canvas.height - h, 25, h);
+            //context.fillRect(x, y, 25, 30);
+            //context.fillStyle = 'rgba(255, 255, 0)';
+            context.fillText('0.2s', x, canvas.height - 3);
         }
 
         function setUserYScale(v) {
